@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#071b35">
+  <meta name="description" content="Recorrido interactivo por la arquitectura y los cuatro roles del Software de Prácticas Pedagógicas (SPP).">
+  <title>SPP | Recorrido interactivo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="SPP inicio"><span class="brand-mark">SPP</span><span>Software de<br><b>Prácticas Pedagógicas</b></span></a>
+    <span class="top-tag"><i></i> EXPERIENCIA INTERACTIVA</span>
+  </header>
+  <main>
+    <section class="hero" id="inicio">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> CONOCE CÓMO SE CONECTA TODO</div>
+        <h1>De la práctica<br>al <em>aprendizaje.</em></h1>
+        <p>Explora cómo estudiantes, tutores, asesores y directores trabajan con los servicios que hacen posible SPP.</p>
+        <div class="hero-actions"><button class="btn btn-primary" id="startTour">▶ Iniciar recorrido guiado</button><button class="btn btn-ghost" id="exploreBtn">Explorar por rol <span>↓</span></button></div>
+        <div class="hero-meta"><span>◷ 90 segundos aprox.</span><span>✦ 4 roles · 3 componentes principales</span></div>
+      </div>
+      <div class="hero-art" aria-label="Ilustración de los componentes conectados">
+        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+        <div class="orbit-node node-user">♙<small>Personas</small></div><div class="orbit-node node-web">▣<small>Plataforma</small></div><div class="orbit-node node-data">◈<small>Datos</small></div>
+        <div class="core"><div class="core-logo">SPP</div><b>Un sistema,<br>cuatro roles</b><small>Arquitectura integrada</small></div>
+        <div class="spark spark-a"></div><div class="spark spark-b"></div>
+      </div>
+    </section>
+    <section class="workspace" id="explorador">
+      <div class="section-heading"><div><div class="eyebrow">01 / EXPLORADOR</div><h2>Elige cómo descubrir SPP</h2><p>Selecciona un rol o reproduce el recorrido completo.</p></div><div class="role-count">4 <span>roles del sistema</span></div></div>
+      <div class="role-grid" id="roleGrid">
+        <button class="role-card active" data-role="student"><span class="role-icon student">♙</span><span class="role-name">Estudiante</span><span class="role-desc">Registra avances, actividades y evidencias.</span><span class="role-link">Ver recorrido ↗</span></button>
+        <button class="role-card" data-role="tutor"><span class="role-icon tutor">♧</span><span class="role-name">Tutor académico</span><span class="role-desc">Asigna actividades, revisa y evalúa.</span><span class="role-link">Ver recorrido ↗</span></button>
+        <button class="role-card" data-role="advisor"><span class="role-icon advisor">✧</span><span class="role-name">Asesor pedagógico</span><span class="role-desc">Acompaña y registra observaciones.</span><span class="role-link">Ver recorrido ↗</span></button>
+        <button class="role-card" data-role="director"><span class="role-icon director">▤</span><span class="role-name">Director</span><span class="role-desc">Supervisa programas e informes.</span><span class="role-link">Ver recorrido ↗</span></button>
+      </div>
+      <div class="demo-panel">
+        <div class="demo-top"><div><div class="eyebrow">02 / FLUJO DE INTERACCIÓN</div><h3 id="flowTitle">Estudiante · Registro de práctica</h3><p id="flowSubtitle">De la acción del usuario a la persistencia de la información.</p></div><div class="live-pill"><span></span> SIMULACIÓN</div></div>
+        <div class="diagram-wrap">
+          <div class="diagram" id="diagram">
+            <svg class="connections" viewBox="0 0 1000 390" preserveAspectRatio="none" aria-hidden="true">
+              <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#6e9bd2" stroke-width="1.3"/></marker></defs>
+              <path class="edge" data-edge="actor-ui" d="M155 190 H245"/><path class="edge" data-edge="ui-core" d="M380 190 H465"/><path class="edge" data-edge="core-db" d="M620 140 C680 140 680 90 745 90"/><path class="edge" data-edge="core-eval" d="M620 190 H745"/><path class="edge" data-edge="core-notif" d="M620 240 C680 240 680 300 745 300"/>
+            </svg>
+            <div class="node actor-node" id="actorNode"><span class="node-symbol">♙</span><b>Estudiante</b><small>Usuario del sistema</small></div>
+            <div class="node ui-node" id="uiNode"><span class="node-symbol">▣</span><b>Frontend</b><small>React 19 + Vite</small></div>
+            <div class="node core-node" id="coreNode"><span class="node-symbol">⬡</span><b>Monolito SPP</b><small>Node.js + Express</small></div>
+            <div class="node db-node" id="dbNode"><span class="node-symbol">◉</span><b>PostgreSQL</b><small>Datos relacionales</small></div>
+            <div class="node eval-node" id="evalNode"><span class="node-symbol">✦</span><b>Evaluaciones</b><small>FastAPI + PostgreSQL</small></div>
+            <div class="node notif-node" id="notifNode"><span class="node-symbol">♧</span><b>Notificaciones</b><small>Express + MongoDB</small></div>
+            <div class="packet" id="packet"></div>
+          </div>
+          <div class="diagram-legend"><span><i class="legend-dot actor-dot"></i> Actor</span><span><i class="legend-dot app-dot"></i> Aplicación</span><span><i class="legend-dot data-dot"></i> Persistencia</span><span><i class="legend-dot service-dot"></i> Microservicio</span></div>
+        </div>
+        <div class="step-info"><div class="step-number"><span id="stepCurrent">01</span><small> / <span id="stepTotal">05</span></small></div><div class="step-copy"><b id="stepTitle">El estudiante inicia sesión y consulta su práctica.</b><p id="stepText">La interfaz presenta las opciones disponibles según el rol y los permisos asignados.</p></div></div>
+        <div class="progress-track"><span id="progressBar"></span></div>
+        <div class="demo-controls"><button class="control-btn" id="prevStep" aria-label="Paso anterior">←</button><button class="btn btn-primary play-btn" id="playBtn">▶ Reproducir recorrido</button><button class="control-btn" id="nextStep" aria-label="Paso siguiente">→</button><button class="control-btn reset-btn" id="resetBtn" aria-label="Reiniciar">↺</button></div>
+        <div class="step-dots" id="stepDots"></div>
+      </div>
+    </section>
+    <section class="architecture" id="arquitectura">
+      <div class="section-heading"><div><div class="eyebrow">03 / VISTA GENERAL</div><h2>Los componentes de SPP</h2><p>Una arquitectura híbrida: monolito modular y microservicios especializados.</p></div></div>
+      <div class="architecture-grid">
+        <article class="arch-card frontend"><div class="arch-label">CAPA DE PRESENTACIÓN</div><div class="arch-icon">▣</div><h3>Frontend web</h3><p>React 19 + Vite</p><small>Interfaz según el rol y sus permisos</small></article>
+        <div class="arch-connector">HTTP / JSON ↕</div>
+        <article class="arch-card monolith"><div class="arch-label">NÚCLEO DE LA PLATAFORMA</div><div class="arch-icon">⬡</div><h3>Monolito SPP</h3><p>Node.js + Express</p><small>Rutas · Controladores · Servicios · Repositorios</small></article>
+        <div class="arch-services">
+          <article class="arch-card eval"><div class="arch-label">MICROSERVICIO</div><div class="arch-icon">✦</div><h3>Evaluaciones</h3><p>Python + FastAPI</p><small>Cuestionarios, intentos y calificaciones</small></article>
+          <article class="arch-card notif"><div class="arch-label">MICROSERVICIO</div><div class="arch-icon">♧</div><h3>Notificaciones</h3><p>Node.js + Express</p><small>Despacho de alertas y correos</small></article>
+        </div>
+        <div class="arch-storage">
+          <div class="storage-item"><b>PostgreSQL / Supabase</b><small>Usuarios, prácticas y datos relacionales del monolito</small></div>
+          <div class="storage-item"><b>PostgreSQL</b><small>Datos propios del servicio de evaluación</small></div>
+          <div class="storage-item"><b>MongoDB</b><small>Cola e historial de notificaciones</small></div>
+          <div class="storage-item"><b>Cloudinary</b><small>Archivos y evidencias multimedia</small></div>
+        </div>
+      </div>
+      <p class="architecture-note">La comunicación entre componentes se representa de forma conceptual. Las flechas muestran el flujo lógico de las solicitudes; no son conexiones en tiempo real.</p>
+    </section>
+    <section class="closing"><div class="closing-mark">SPP</div><div><h2>La práctica conectada con el aprendizaje.</h2><p>Una plataforma para gestionar, acompañar y evaluar las prácticas pedagógicas.</p></div><a href="#inicio" class="back-top">Volver arriba ↑</a></section>
+  </main>
+  <footer><span>SPP · Software de Prácticas Pedagógicas</span><span>Demostración educativa · Arquitectura conceptual</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>
