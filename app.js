@@ -1,75 +1,578 @@
+const roleOrder = ["student", "tutor", "advisor", "director"];
+
 const roleFlows = {
- student:{name:"Estudiante",icon:"♙",title:"Registro y desarrollo de la práctica",subtitle:"El estudiante consulta su práctica, desarrolla actividades y entrega evidencias.",steps:[
-  ["Consulta su práctica","La interfaz React presenta la información de la práctica asignada y el avance del estudiante.",["actor","ui","core","db"]],
-  ["Envía una actividad o evidencia","La solicitud viaja desde el frontend al monolito Node.js + Express, que valida la sesión y los permisos.",["actor","ui","core"]],
-  ["Se procesa y guarda la información","Los servicios y repositorios del monolito gestionan los datos relacionales en PostgreSQL / Supabase.",["core","db"]],
-  ["Se almacena la evidencia","Los archivos y documentos se gestionan mediante Cloudinary; el sistema conserva sus referencias y metadatos.",["core","db"]],
-  ["Recibe seguimiento y notificaciones","Los eventos pertinentes pueden activar el servicio de notificaciones, que gestiona la cola e historial en MongoDB.",["core","notif"]]
- ]},
- tutor:{name:"Tutor académico",icon:"♧",title:"Acompañamiento y evaluación",subtitle:"El tutor organiza actividades, revisa evidencias y realiza evaluaciones.",steps:[
-  ["Consulta estudiantes asignados","El tutor accede a su panel. React muestra la información permitida para su rol.",["actor","ui","core","db"]],
-  ["Crea y asigna actividades","El monolito valida la operación y registra actividades, fechas y asignaciones en PostgreSQL.",["actor","ui","core","db"]],
-  ["Revisa evidencias y registra retroalimentación","El monolito consulta las referencias de evidencias y almacena observaciones y seguimiento.",["core","db"]],
-  ["Gestiona una evaluación","Cuando corresponde, el monolito se comunica por API con el microservicio FastAPI para operaciones de evaluación.",["core","eval"]],
-  ["Se informa el resultado","El flujo puede generar eventos para el servicio de notificaciones y actualizar la información consultada por los actores.",["core","notif","db"]]
- ]},
- advisor:{name:"Asesor pedagógico",icon:"✧",title:"Acompañamiento pedagógico",subtitle:"El asesor consulta el proceso, registra observaciones y apoya el seguimiento.",steps:[
-  ["Accede al seguimiento","El frontend presenta los estudiantes y prácticas disponibles según los permisos del asesor.",["actor","ui","core","db"]],
-  ["Consulta avances y evidencias","El monolito obtiene los datos relacionales y las referencias de archivos asociados a la práctica.",["core","db"]],
-  ["Registra observaciones","La solicitud se valida en Node.js + Express y se persiste mediante los repositorios del monolito.",["actor","ui","core","db"]],
-  ["Comparte retroalimentación","La información queda disponible para el seguimiento de los participantes autorizados.",["core","db"]],
-  ["Se generan avisos cuando aplica","Los eventos de seguimiento pueden comunicarse al servicio de notificaciones para su despacho.",["core","notif"]]
- ]},
- director:{name:"Director",icon:"▤",title:"Supervisión e informes",subtitle:"El director revisa el estado general de las prácticas y consulta indicadores.",steps:[
-  ["Abre el panel de dirección","React carga las opciones de supervisión habilitadas para el rol director.",["actor","ui","core"]],
-  ["Consulta información consolidada","El monolito consulta los datos relacionales de prácticas, usuarios y seguimiento en PostgreSQL.",["core","db"]],
-  ["Revisa indicadores y reportes","Los servicios de negocio preparan información estadística y reportes para su visualización o exportación.",["core","db"]],
-  ["Consulta resultados de evaluación","Cuando se requieren datos del dominio de evaluación, el monolito solicita la información al servicio FastAPI.",["core","eval"]],
-  ["Supervisa el proceso","El director dispone de una vista consolidada para apoyar decisiones y seguimiento del programa.",["actor","ui","core","db"]]
- ]}
+  student: {
+    name: "Estudiante",
+    icon: "♙",
+    title: "Registro y desarrollo de la práctica",
+    subtitle: "El estudiante consulta su práctica, desarrolla actividades y entrega evidencias.",
+    steps: [
+      [
+        "Consulta su práctica",
+        "La interfaz React solicita al monolito la práctica asignada y sus avances en PostgreSQL.",
+        ["actor", "ui", "core", "db"],
+        "Lectura inicial",
+        "GET /practica"
+      ],
+      [
+        "Entrega actividades y evidencias",
+        "El estudiante sube avances desde React; el monolito valida la sesión, guarda datos en PostgreSQL y almacena archivos en Cloudinary.",
+        ["actor", "ui", "core", "db"],
+        "Persistencia + Archivo",
+        "POST /evidencia"
+      ],
+      [
+        "Responde evaluaciones",
+        "El estudiante responde cuestionarios desde React; el monolito reenvía sus respuestas al microservicio FastAPI para registrar el intento.",
+        ["actor", "ui", "core", "eval"],
+        "Microservicio",
+        "POST /respuestas"
+      ],
+      [
+        "Consulta su progreso y notas",
+        "El monolito consolida en PostgreSQL el avance de actividades, observaciones y estado general de la práctica.",
+        ["core", "db"],
+        "Seguimiento",
+        "SQL + Resultados"
+      ],
+      [
+        "Activa avisos de seguimiento",
+        "El monolito emite el evento al microservicio de notificaciones, que guarda la cola e historial en MongoDB.",
+        ["core", "notif"],
+        "Notificación",
+        "Evento → Alerta"
+      ]
+    ]
+  },
+  tutor: {
+    name: "Tutor académico",
+    icon: "♧",
+    title: "Acompañamiento y evaluación",
+    subtitle: "El tutor organiza actividades, revisa evidencias y realiza evaluaciones.",
+    steps: [
+      [
+        "Consulta estudiantes asignados",
+        "El tutor abre su panel; React pide al monolito la lista de estudiantes y prácticas de PostgreSQL.",
+        ["actor", "ui", "core", "db"],
+        "Consulta de grupo",
+        "GET /estudiantes"
+      ],
+      [
+        "Crea y asigna actividades",
+        "El monolito valida los permisos del tutor y registra nuevas actividades y fechas en PostgreSQL.",
+        ["actor", "ui", "core", "db"],
+        "Asignación",
+        "POST /actividad"
+      ],
+      [
+        "Revisa evidencias y retroalimenta",
+        "El monolito consulta las referencias de evidencias y guarda las observaciones del tutor en la base de datos.",
+        ["core", "db"],
+        "Revisión",
+        "SQL + Evidencia"
+      ],
+      [
+        "Gestiona una evaluación",
+        "El monolito se comunica por API REST con el microservicio FastAPI para registrar cuestionarios o notas.",
+        ["core", "eval"],
+        "Microservicio",
+        "API FastAPI"
+      ],
+      [
+        "Notifica el resultado",
+        "Se actualiza el seguimiento en el monolito y el servicio de notificaciones despacha el aviso al estudiante.",
+        ["core", "notif"],
+        "Aviso de nota",
+        "Evento → Correo"
+      ]
+    ]
+  },
+  advisor: {
+    name: "Asesor pedagógico",
+    icon: "✧",
+    title: "Acompañamiento pedagógico",
+    subtitle: "El asesor consulta el proceso, registra observaciones y apoya el seguimiento.",
+    steps: [
+      [
+        "Accede al seguimiento",
+        "El frontend carga los estudiantes y prácticas habilitadas según los permisos del asesor.",
+        ["actor", "ui", "core", "db"],
+        "Acceso por rol",
+        "GET /seguimiento"
+      ],
+      [
+        "Consulta avances y evidencias",
+        "El monolito obtiene los registros de avance y las referencias de archivos asociadas a la práctica.",
+        ["core", "db"],
+        "Lectura de avances",
+        "SQL + Cloudinary"
+      ],
+      [
+        "Registra observaciones pedagógicas",
+        "La observación enviada desde React se valida en Node.js + Express y se persiste en PostgreSQL.",
+        ["actor", "ui", "core", "db"],
+        "Registro",
+        "POST /observacion"
+      ],
+      [
+        "Comparte retroalimentación",
+        "La información queda consolidada en PostgreSQL para que los participantes autorizados la consulten.",
+        ["core", "db"],
+        "Disponibilidad",
+        "UPDATE estado"
+      ],
+      [
+        "Genera avisos cuando aplica",
+        "Los eventos relevantes de seguimiento se envían al microservicio de notificaciones en MongoDB.",
+        ["core", "notif"],
+        "Notificación",
+        "Evento → Aviso"
+      ]
+    ]
+  },
+  director: {
+    name: "Director",
+    icon: "▤",
+    title: "Supervisión e informes",
+    subtitle: "El director revisa el estado general de las prácticas y consulta indicadores.",
+    steps: [
+      [
+        "Abre el panel de dirección",
+        "React carga la vista ejecutiva y solicita al monolito las opciones habilitadas para el rol director.",
+        ["actor", "ui", "core"],
+        "Autenticación",
+        "JWT + Rol"
+      ],
+      [
+        "Consulta información consolidada",
+        "El monolito consulta prácticas, usuarios y estados de seguimiento desde PostgreSQL.",
+        ["core", "db"],
+        "Consolidado",
+        "SELECT global"
+      ],
+      [
+        "Prepara indicadores y reportes",
+        "Los servicios de negocio procesan métricas por programa y cohorte en PostgreSQL para visualizar o exportar.",
+        ["core", "db"],
+        "Analítica",
+        "Métricas SQL"
+      ],
+      [
+        "Visualiza resultados de evaluación",
+        "El director consulta en modo solo lectura los resultados y el desempeño general desde el microservicio FastAPI.",
+        ["actor", "ui", "core", "eval"],
+        "Solo lectura",
+        "GET /evaluaciones"
+      ],
+      [
+        "Recibe avisos y notificaciones",
+        "El microservicio de notificaciones en MongoDB gestiona alertas del programa y novedades para el director.",
+        ["core", "notif"],
+        "Notificación",
+        "Evento → Director"
+      ]
+    ]
+  }
 };
-const allSteps = Object.keys(roleFlows).flatMap(role=>roleFlows[role].steps.map((s,i)=>({role,index:i})));
-let currentRole="student",currentStep=0,playing=false,timer=null;
-const $=id=>document.getElementById(id);
-const nodes={actor:$("actorNode"),ui:$("uiNode"),core:$("coreNode"),db:$("dbNode"),eval:$("evalNode"),notif:$("notifNode")};
-const edgeMap={"actor-ui":["actor","ui"],"ui-core":["ui","core"],"core-db":["core","db"],"core-eval":["core","eval"],"core-notif":["core","notif"]};
-function render(){
- const flow=roleFlows[currentRole],step=flow.steps[currentStep];
- $("flowTitle").textContent=flow.name+" · "+flow.title;
- $("flowSubtitle").textContent=flow.subtitle;
- $("actorNode").querySelector("b").textContent=flow.name;
- $("actorNode").querySelector(".node-symbol").textContent=flow.icon;
- $("stepCurrent").textContent=String(currentStep+1).padStart(2,"0");
- $("stepTotal").textContent=String(flow.steps.length).padStart(2,"0");
- $("stepTitle").textContent=step[0];$("stepText").textContent=step[1];
- $("progressBar").style.width=((currentStep+1)/flow.steps.length*100)+"%";
- $("playBtn").textContent=playing?"Ⅱ Pausar recorrido":"▶ Reproducir recorrido";
- Object.entries(nodes).forEach(([key,node])=>node.classList.toggle("active",step[2].includes(key)));
- document.querySelectorAll(".edge").forEach(edge=>{
-  const pair=edgeMap[edge.dataset.edge];edge.classList.toggle("active",pair&&pair.every(k=>step[2].includes(k)));
- });
- $("stepDots").innerHTML="";
- flow.steps.forEach((_,i)=>{const b=document.createElement("button");b.className=i===currentStep?"active":"";b.setAttribute("aria-label","Ir al paso "+(i+1));b.onclick=()=>{pause();currentStep=i;render()};$("stepDots").appendChild(b)});
- document.querySelectorAll(".role-card").forEach(card=>card.classList.toggle("active",card.dataset.role===currentRole));
- if(playing) animatePacket(step[2]);
+
+const nodeDescriptions = {
+  actor: "Rol activo en SPP (Estudiante, Tutor, Asesor o Director). Cada rol ve únicamente las acciones permitidas.",
+  ui: "Frontend web en React 19 + Vite. Presenta formularios, paneles y evidencias según los permisos del usuario.",
+  core: "Monolito principal en Node.js + Express. Valida sesiones, aplica reglas de negocio y coordina datos y microservicios.",
+  db: "Persistencia del monolito: PostgreSQL / Supabase para datos relacionales y Cloudinary para archivos multimedia.",
+  eval: "Microservicio independiente en Python + FastAPI con su propia base PostgreSQL para cuestionarios y calificaciones.",
+  notif: "Microservicio en Node.js + Express con MongoDB encargado de la cola, historial y envío de alertas y correos."
+};
+
+const edgeDefinitions = [
+  ["actor", "ui"],
+  ["ui", "core"],
+  ["core", "db"],
+  ["core", "eval"],
+  ["core", "notif"]
+];
+
+let currentRole = "student";
+let currentStep = 0;
+let playing = false;
+let tourAllRoles = false;
+let timer = null;
+let packetRaf = null;
+let selectedTipNode = null;
+
+const $ = id => document.getElementById(id);
+
+const nodes = {
+  actor: $("actorNode"),
+  ui: $("uiNode"),
+  core: $("coreNode"),
+  db: $("dbNode"),
+  eval: $("evalNode"),
+  notif: $("notifNode")
+};
+
+function isMobileDiagram() {
+  return window.innerWidth <= 760;
 }
-function animatePacket(active){
- const packet=$("packet"),diagram=$("diagram");
- if(window.innerWidth<761){packet.classList.remove("go");return}
- const sequence=active.filter(k=>nodes[k]);if(sequence.length<2){packet.classList.remove("go");return}
- const a=nodes[sequence[0]].getBoundingClientRect(),b=nodes[sequence[1]].getBoundingClientRect(),d=diagram.getBoundingClientRect();
- packet.style.left=(a.left+a.width/2-d.left-6)+"px";packet.style.top=(a.top+a.height/2-d.top-6)+"px";packet.classList.add("go");
- packet.animate([{transform:"translate(0,0)"},{transform:`translate(${b.left+b.width/2-a.left-a.width/2}px,${b.top+b.height/2-a.top-a.height/2}px)`}],{duration:750,easing:"ease-in-out"});
+
+function getBoxRelative(el, containerRect) {
+  const r = el.getBoundingClientRect();
+  return {
+    left: r.left - containerRect.left,
+    top: r.top - containerRect.top,
+    right: r.right - containerRect.left,
+    bottom: r.bottom - containerRect.top,
+    width: r.width,
+    height: r.height,
+    cx: r.left - containerRect.left + r.width / 2,
+    cy: r.top - containerRect.top + r.height / 2
+  };
 }
-function pause(){playing=false;clearInterval(timer);timer=null;$("packet").classList.remove("go");$("playBtn").textContent="▶ Reproducir recorrido"}
-function next(){const max=roleFlows[currentRole].steps.length;if(currentStep<max-1){currentStep++}else{pause();return}render()}
-function play(){if(playing){pause();return}if(currentStep===roleFlows[currentRole].steps.length-1)currentStep=0;playing=true;render();timer=setInterval(()=>{if(currentStep>=roleFlows[currentRole].steps.length-1){pause();return}currentStep++;render()},3600)}
-function selectRole(role){pause();currentRole=role;currentStep=0;render();$("explorador").scrollIntoView({behavior:"smooth",block:"start"})}
-document.querySelectorAll(".role-card").forEach(card=>card.addEventListener("click",()=>selectRole(card.dataset.role)));
-$("startTour").addEventListener("click",()=>{selectRole("student");play();$("explorador").scrollIntoView({behavior:"smooth"})});
-$("exploreBtn").addEventListener("click",()=>$("explorador").scrollIntoView({behavior:"smooth"}));
-$("playBtn").addEventListener("click",play);
-$("nextStep").addEventListener("click",()=>{pause();next()});
-$("prevStep").addEventListener("click",()=>{pause();currentStep=Math.max(0,currentStep-1);render()});
-$("resetBtn").addEventListener("click",()=>{pause();currentStep=0;render()});
-render();
+
+function buildEdgePath(fromKey, toKey, boxes) {
+  const a = boxes[fromKey];
+  const b = boxes[toKey];
+  const mobile = isMobileDiagram();
+
+  if (!mobile) {
+    const x1 = a.right;
+    const y1 = a.cy;
+    const x2 = b.left;
+    const y2 = b.cy;
+    const dx = (x2 - x1) * 0.55;
+    return `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${(x1 + dx).toFixed(1)} ${y1.toFixed(1)}, ${(x2 - dx).toFixed(1)} ${y2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+  }
+
+  if (fromKey === "actor" && toKey === "ui") {
+    const x1 = a.right;
+    const y1 = a.cy;
+    const x2 = b.left;
+    const y2 = b.cy;
+    return `M ${x1.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+  }
+
+  if (fromKey === "ui" && toKey === "core") {
+    const x1 = a.cx;
+    const y1 = a.bottom;
+    const x2 = b.cx + b.width * 0.18;
+    const y2 = b.top;
+    const midY = (y1 + y2) / 2;
+    return `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${x1.toFixed(1)} ${midY.toFixed(1)}, ${x2.toFixed(1)} ${midY.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+  }
+
+  const offsetX = fromKey === "core" && toKey === "db" ? -b.width * 0.15 : fromKey === "core" && toKey === "eval" ? b.width * 0.15 : 0;
+  const x1 = a.cx + offsetX;
+  const y1 = a.bottom;
+  const x2 = b.cx;
+  const y2 = b.top;
+  const midY = (y1 + y2) / 2;
+  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${x1.toFixed(1)} ${midY.toFixed(1)}, ${x2.toFixed(1)} ${midY.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+
+function drawEdges(activeHops = []) {
+  const diagram = $("diagram");
+  const svg = $("connectionsSvg");
+  const layer = $("edgesLayer");
+  const rect = diagram.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+
+  svg.setAttribute("viewBox", `0 0 ${rect.width} ${rect.height}`);
+  const boxes = {};
+  Object.entries(nodes).forEach(([k, el]) => {
+    boxes[k] = getBoxRelative(el, rect);
+  });
+
+  const activePairs = new Set();
+  for (let i = 0; i < activeHops.length - 1; i++) {
+    activePairs.add(`${activeHops[i]}-${activeHops[i + 1]}`);
+  }
+
+  layer.innerHTML = "";
+  edgeDefinitions.forEach(([from, to]) => {
+    const key = `${from}-${to}`;
+    const isActive = activePairs.has(key);
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", buildEdgePath(from, to, boxes));
+    path.setAttribute("data-edge", key);
+    path.setAttribute("class", isActive ? "edge active" : "edge");
+    path.setAttribute("marker-end", isActive ? "url(#arrowActive)" : "url(#arrowIdle)");
+    layer.appendChild(path);
+  });
+}
+
+function renderFlowChain(hops) {
+  const container = $("flowChain");
+  container.innerHTML = "";
+  const flow = roleFlows[currentRole];
+
+  hops.forEach((key, idx) => {
+    const chip = document.createElement("span");
+    chip.className = "chain-chip";
+    chip.dataset.hop = key;
+    const label = key === "actor" ? flow.name : nodes[key].querySelector("b").textContent;
+    const symbol = key === "actor" ? flow.icon : nodes[key].querySelector(".node-symbol").textContent;
+    chip.textContent = `${symbol} ${label}`;
+    container.appendChild(chip);
+
+    if (idx < hops.length - 1) {
+      const arrow = document.createElement("span");
+      arrow.className = "chain-arrow";
+      arrow.textContent = "→";
+      container.appendChild(arrow);
+    }
+  });
+}
+
+function highlightHop(nodeKey) {
+  Object.entries(nodes).forEach(([k, el]) => {
+    el.classList.toggle("hop-focus", k === nodeKey);
+  });
+  document.querySelectorAll(".chain-chip").forEach(chip => {
+    chip.classList.toggle("is-hop", chip.dataset.hop === nodeKey);
+  });
+}
+
+function stopPacketAnimation() {
+  if (packetRaf) {
+    cancelAnimationFrame(packetRaf);
+    packetRaf = null;
+  }
+  $("packet").classList.remove("go");
+  highlightHop(null);
+}
+
+function animateHops(hops, label) {
+  stopPacketAnimation();
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!hops || hops.length < 2) return;
+
+  const packet = $("packet");
+  const packetLabel = $("packetLabel");
+  packetLabel.textContent = label || "HTTP";
+
+  const segments = [];
+  for (let i = 0; i < hops.length - 1; i++) {
+    const pathEl = document.querySelector(`#edgesLayer path[data-edge="${hops[i]}-${hops[i + 1]}"]`);
+    if (pathEl) {
+      segments.push({ from: hops[i], to: hops[i + 1], path: pathEl, len: pathEl.getTotalLength() });
+    }
+  }
+  if (!segments.length) return;
+
+  const segDuration = Math.min(720, Math.max(460, Math.floor(2100 / segments.length)));
+  let segIndex = 0;
+  let segStart = null;
+
+  packet.classList.add("go");
+  highlightHop(segments[0].from);
+
+  function frame(ts) {
+    if (!segStart) segStart = ts;
+    const seg = segments[segIndex];
+    const progress = Math.min(1, (ts - segStart) / segDuration);
+    const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+    const pt = seg.path.getPointAtLength(seg.len * eased);
+
+    packet.style.left = `${pt.x}px`;
+    packet.style.top = `${pt.y}px`;
+
+    if (progress >= 1) {
+      highlightHop(seg.to);
+      segIndex++;
+      if (segIndex < segments.length) {
+        segStart = ts;
+        packetRaf = requestAnimationFrame(frame);
+      } else {
+        setTimeout(() => {
+          if (!playing) highlightHop(null);
+        }, 650);
+      }
+      return;
+    }
+
+    packetRaf = requestAnimationFrame(frame);
+  }
+
+  packetRaf = requestAnimationFrame(frame);
+}
+
+function updateModePill() {
+  const pill = $("modePill");
+  if (tourAllRoles && playing) {
+    const idx = roleOrder.indexOf(currentRole) + 1;
+    pill.classList.add("tour");
+    pill.innerHTML = `<span></span> RECORRIDO · ROL ${idx}/${roleOrder.length}`;
+  } else {
+    pill.classList.remove("tour");
+    pill.innerHTML = `<span></span> SIMULACIÓN`;
+  }
+}
+
+function render(animate = true) {
+  const flow = roleFlows[currentRole];
+  const step = flow.steps[currentStep];
+  const [stepTitle, stepText, hops, badge, packetLabel] = step;
+
+  $("flowTitle").textContent = `${flow.name} · ${flow.title}`;
+  $("flowSubtitle").textContent = flow.subtitle;
+  $("actorNode").querySelector("b").textContent = flow.name;
+  $("actorNode").querySelector(".node-symbol").textContent = flow.icon;
+
+  $("stepCurrent").textContent = String(currentStep + 1).padStart(2, "0");
+  $("stepTotal").textContent = String(flow.steps.length).padStart(2, "0");
+  $("stepBadge").textContent = badge;
+  $("stepTitle").textContent = stepTitle;
+  $("stepText").textContent = stepText;
+  $("progressBar").style.width = `${((currentStep + 1) / flow.steps.length) * 100}%`;
+  $("playBtn").textContent = playing ? "Ⅱ Pausar" : "▶ Reproducir";
+
+  Object.entries(nodes).forEach(([key, node]) => {
+    node.classList.toggle("active", hops.includes(key));
+  });
+
+  renderFlowChain(hops);
+  drawEdges(hops);
+  updateModePill();
+
+  const dotsContainer = $("stepDots");
+  dotsContainer.innerHTML = "";
+  flow.steps.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.className = i === currentStep ? "active" : "";
+    b.setAttribute("aria-label", `Ir al paso ${i + 1}`);
+    b.onclick = () => {
+      pause();
+      currentStep = i;
+      render(true);
+    };
+    dotsContainer.appendChild(b);
+  });
+
+  document.querySelectorAll(".role-card").forEach(card => {
+    card.classList.toggle("active", card.dataset.role === currentRole);
+  });
+
+  if (animate) {
+    animateHops(hops, packetLabel);
+  }
+}
+
+function pause() {
+  playing = false;
+  tourAllRoles = false;
+  clearInterval(timer);
+  timer = null;
+  stopPacketAnimation();
+  $("playBtn").textContent = "▶ Reproducir";
+  updateModePill();
+}
+
+function advanceStep() {
+  const max = roleFlows[currentRole].steps.length;
+  if (currentStep < max - 1) {
+    currentStep++;
+    render(true);
+    return;
+  }
+
+  if (tourAllRoles) {
+    const nextRoleIdx = roleOrder.indexOf(currentRole) + 1;
+    if (nextRoleIdx < roleOrder.length) {
+      currentRole = roleOrder[nextRoleIdx];
+      currentStep = 0;
+      render(true);
+      return;
+    }
+  }
+
+  pause();
+}
+
+function play(fullTour = false) {
+  if (playing) {
+    pause();
+    return;
+  }
+  tourAllRoles = fullTour;
+  if (!fullTour && currentStep === roleFlows[currentRole].steps.length - 1) {
+    currentStep = 0;
+  }
+  playing = true;
+  render(true);
+  timer = setInterval(advanceStep, 4200);
+}
+
+function selectRole(role) {
+  pause();
+  currentRole = role;
+  currentStep = 0;
+  render(true);
+  $("explorador").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Object.entries(nodes).forEach(([key, el]) => {
+  el.addEventListener("click", () => {
+    const tip = $("nodeTip");
+    if (selectedTipNode === key && !tip.hidden) {
+      tip.hidden = true;
+      selectedTipNode = null;
+      return;
+    }
+    selectedTipNode = key;
+    const title = key === "actor" ? roleFlows[currentRole].name : el.querySelector("b").textContent;
+    $("nodeTipTitle").textContent = `${title}:`;
+    $("nodeTipText").textContent = nodeDescriptions[key];
+    tip.hidden = false;
+  });
+});
+
+document.querySelectorAll(".role-card").forEach(card => {
+  card.addEventListener("click", () => selectRole(card.dataset.role));
+});
+
+$("startTour").addEventListener("click", () => {
+  pause();
+  currentRole = "student";
+  currentStep = 0;
+  play(true);
+  $("explorador").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+$("exploreBtn").addEventListener("click", () => {
+  $("explorador").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+$("playBtn").addEventListener("click", () => play(false));
+
+$("nextStep").addEventListener("click", () => {
+  pause();
+  const max = roleFlows[currentRole].steps.length;
+  if (currentStep < max - 1) {
+    currentStep++;
+    render(true);
+  }
+});
+
+$("prevStep").addEventListener("click", () => {
+  pause();
+  currentStep = Math.max(0, currentStep - 1);
+  render(true);
+});
+
+$("resetBtn").addEventListener("click", () => {
+  pause();
+  currentStep = 0;
+  render(true);
+});
+
+let resizeRaf = null;
+window.addEventListener("resize", () => {
+  if (resizeRaf) cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(() => {
+    const hops = roleFlows[currentRole].steps[currentStep][2];
+    drawEdges(hops);
+  });
+});
+
+window.addEventListener("load", () => render(true));
+render(false);
